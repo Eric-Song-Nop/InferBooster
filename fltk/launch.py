@@ -64,20 +64,20 @@ def exec_distributed_client(task_id: str, conf: DistributedConfig = None,
     print(epoch_data)
 
 
-def get_arrival_generator_args(conf: DistributedConfig, replication: int) -> List[Any]:
+def get_arrival_generator_args(conf: DistributedConfig, replication: int) -> (List[Any], Dict[str, Any]):
     """
     Function to get arrival generator arguments based on current configuration of Orchestrator.
-    @param conf:
-    @type conf:
-    @param replication:
-    @type replication:
-    @return: Configuration for args and kwargs for the generator.
+    @param conf: Configuration for distributed/federated learning experiments.
+    @type conf: DistributedConfig
+    @param replication: Replication index for experiment to retrieve arguemnts for.
+    @type replication: int
+    @return: Configuration for args and keyword args (kwd) for the generator.
     @rtype: Tuple[List[Any], Dict[str, Any]]
     """
-    args = [conf.get_duration()]
+    args, kwd_args = [conf.get_duration()], {}
     if conf.cluster_config.orchestrator.orchestrator_type == OrchestratorType.BATCH:
-        args.append(conf.execution_config.reproducibility.seeds[replication])
-    return args
+        kwd_args['seed'] = conf.execution_config.reproducibility.seeds[replication]
+    return args, kwd_args
 
 
 def exec_orchestrator(args: Namespace = None, conf: DistributedConfig = None, replication: int = 0):
@@ -116,8 +116,8 @@ def exec_orchestrator(args: Namespace = None, conf: DistributedConfig = None, re
     pool.apply(cluster_manager.start)
 
     logging.info("Starting arrival generator")
-    arv_gen_args = get_arrival_generator_args(conf, replication)
-    pool.apply_async(arrival_generator.start, args=arv_gen_args)
+    arv_gen_args, kwd_args = get_arrival_generator_args(conf, replication)
+    pool.apply_async(arrival_generator.start, args=arv_gen_args, kwds=kwd_args)
     logging.info("Starting orchestrator")
     pool.apply(orchestrator.run, kwds={"experiment_replication": replication})
 
@@ -271,8 +271,9 @@ def launch_remote(arg_path: Path, conf_path: Path, rank: Rank, nic: Optional[NIC
 
     msg = f'Starting with host={host} and port={os.environ["MASTER_PORT"]} and interface={nic}'
     logging.log(logging.INFO, msg)
+    # fixme: Move to async implementation to prevent CPP memory leak
     options = rpc.TensorPipeRpcBackendOptions(
-            num_worker_threads=16,
+            num_worker_threads=16 if rank == 0 else 4,
             rpc_timeout=0,  # infinite timeout
             init_method='env://',
             _transports=["uv"]  # Use LibUV backend for async/IO interaction
@@ -287,6 +288,7 @@ def launch_remote(arg_path: Path, conf_path: Path, rank: Rank, nic: Optional[NIC
         )
         client_node = Client(f'client{rank}', rank, r_conf.world_size, r_conf)
         client_node.remote_registration()
+        client_node.run()
     else:
         print(f'Starting the PS (Fed) with world size={r_conf.world_size}')
         rpc.init_rpc(
@@ -295,8 +297,13 @@ def launch_remote(arg_path: Path, conf_path: Path, rank: Rank, nic: Optional[NIC
                 world_size=r_conf.world_size,
                 rpc_backend_options=options
         )
+
         federator_node = Federator('federator', 0, r_conf.world_size, r_conf)
-        federator_node.run()
+        try:
+            federator_node.run()
+        except Exception as e:
+            logging.critical(f"Federator failed execution with reason: {e}."
+                             f"{e.with_traceback()}")
         federator_node.stop_all_clients()
     print('Ending program')
     exit(0)
@@ -336,9 +343,9 @@ def launch_cluster(arg_path: Path, conf_path: Path, rank: Rank, nic: Optional[NI
     # Set the seed for arrivals, torch seed is mostly ignored. Set the `arrival_seed` to a different value
     # for each repetition that you want to run an experiment with.
     for replication, experiment_seed in enumerate(conf.execution_config.reproducibility.seeds):
+        logging.info(f"Starting with experiment replication: {replication} with seed: {experiment_seed}")
+        init_reproducibility(conf.execution_config)
         try:
-            logging.info(f"Starting with experiment replication: {replication} with seed: {experiment_seed}")
-            init_reproducibility(conf.execution_config)
             exec_orchestrator(args=args, conf=conf, replication=replication)
         except Exception as e:
             logging.info(f"Execution of replication {replication} with seed {experiment_seed} failed."
