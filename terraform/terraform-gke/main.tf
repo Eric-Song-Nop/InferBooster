@@ -14,6 +14,7 @@ module "gke" {
   ip_range_pods     = var.ip_range_pods_name
   ip_range_services = var.ip_range_services_name
 
+
   http_load_balancing        = false
   network_policy             = false
   horizontal_pod_autoscaling = false
@@ -26,7 +27,7 @@ module "gke" {
   node_pools = [
     {
       name               = "default-node-pool"
-      machine_type       = "e2-medium"
+      machine_type       = "n1-standard-4"
       node_locations     = "us-central1-c"
       auto_scaling       = false
       node_count         = 3
@@ -43,10 +44,12 @@ module "gke" {
       service_account    = local.terraform_service_account
       preemptible        = false
       initial_node_count = 0
+      accelerator_count  = 1
+      accelerator_type   = "nvidia-tesla-t4"
     },
     {
       name               = "medium-fltk-pool-1"
-      machine_type       = "e2-highcpu-8"
+      machine_type       = "n1-standard-4"
       node_locations     = "us-central1-c"
       auto_scaling       = false              # Make sure to set min/max count if you change this
       node_count         = 4
@@ -63,6 +66,8 @@ module "gke" {
       service_account    = local.terraform_service_account
       preemptible        = false
       initial_node_count = 0
+      accelerator_count  = 1
+      accelerator_type   = "nvidia-tesla-t4"
     },
   ]
   # Allow the pods in the node pool to pull from gcr.io/<project-id>/<container-name>
