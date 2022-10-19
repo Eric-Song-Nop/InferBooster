@@ -2,9 +2,9 @@ from torch.nn import Module
 from torch import nn
 
 
-class LENET5MINST(Module):
+class LENET5MNIST(Module):
     def __init__(self):
-        super(LENET5MINST, self).__init__()
+        super(LENET5MNIST, self).__init__()
         self.conv1 = nn.Conv2d(1, 6, 5)
         self.relu1 = nn.ReLU()
         self.pool1 = nn.MaxPool2d(2)

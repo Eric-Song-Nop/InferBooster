@@ -10,7 +10,7 @@ from .cifar_10_cnn import Cifar10CNN
 from .cifar_10_resnet import Cifar10ResNet, ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from .fashion_mnist_cnn import FashionMNISTCNN
 from .fashion_mnist_resnet import FashionMNISTResNet
-from .lenet_5_mnist import LENET5MINST
+from .lenet_5_mnist import LENET5MNIST
 from .mnist_cnn import MNIST_CNN
 from .reddit_lstm import RNNModel
 from .simple import SimpleMnist, SimpleNet
@@ -30,7 +30,7 @@ def _available_nets() -> Dict[Nets, Type[torch.nn.Module]]:
         Nets.fashion_mnist_cnn: FashionMNISTCNN,
         Nets.fashion_mnist_resnet: FashionMNISTResNet,
         Nets.mnist_cnn: MNIST_CNN,
-        Nets.lenet_5_mnist: LENET5MINST
+        Nets.lenet_5_mnist: LENET5MNIST
     }
 
 

@@ -5,9 +5,9 @@ cuda: True
 scheduler_step_size: 50
 scheduler_gamma: 0.5
 min_lr: 1e-10
-optimizer: Adam
+optimizer: SGD
 optimizer_args: {'lr': 0.001, 'betas': [0.9, 0.999]}
-model: FashionMNISTCNN
+model: LENET5MNIST
 dataset: mnist
 max_epoch: 1
 learning_rate: 0.001
