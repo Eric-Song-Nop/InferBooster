@@ -18,7 +18,7 @@
             }
           ],
           "networkConfiguration": {
-            "network": "FashionMNISTCNN",
+            "network": "LENET5MNIST",
             "lossFunction": "CrossEntropyLoss",
             "dataset": "mnist"
           },
@@ -38,7 +38,7 @@
               "testBatchSize": 128,
               "learningRateDecay": 0.0002,
               "optimizerConfig": {
-                "type": "Adam",
+                "type": "SGD",
                 "learningRate": 0.001,
                 "betas": [
                   0.9,

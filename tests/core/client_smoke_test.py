@@ -25,7 +25,8 @@ MODEL_SET_PAIRING = [
     [Nets.cifar10_resnet, Dataset.cifar10],
     [Nets.fashion_mnist_cnn, Dataset.fashion_mnist],
     # [Nets.fashion_mnist_resnet, Dataset.fashion_mnist], # Fixme
-    [Nets.mnist_cnn, Dataset.mnist]
+    [Nets.mnist_cnn, Dataset.mnist],
+    [Nets.lenet_5_mnist, Dataset.mnist]
 ]
 
 

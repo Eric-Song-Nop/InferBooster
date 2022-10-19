@@ -1,6 +1,6 @@
 FROM bitnami/pytorch:1.12.1
 
-MAINTAINER Jeroen Galjaard <J.M.Galjaard-1@student.tudelft.nl>
+MAINTAINER Yufan Tang <Y.Tang-15@student.tudelft.nl>
 
 # Run build without interactive dialogue
 ARG DEBIAN_FRONTEND=noninteractive
